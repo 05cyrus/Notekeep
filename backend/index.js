@@ -1,48 +1,58 @@
-import express from "express";
-import bodyParser from "body-parser";
-import pg from "pg";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const db=new pg.Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT
-  });
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { Pool } = require('pg');
 
 const app = express();
-const port = 3000;
-db.connect();
-
+app.use(cors());
 app.use(bodyParser.json());
 
-app.get('/notes', async (req, res) => {
-    try {
-      const result = await pool.query('SELECT * FROM note ORDER BY id DESC');
-      res.json(result.rows);
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).send('Server Error');
-    }
-  });
+require('dotenv').config();
 
-  app.post('/notes', async (req, res) => {
+const pool = new Pool({
+    user: process.env.PG_USER,
+    host: process.env.PG_HOST,
+    database: process.env.PG_DATABASE,
+    password: process.env.PG_PASSWORD,
+    port: process.env.PG_PORT,
+});
+
+app.post('/api/notes', async (req, res) => {
     const { title, content } = req.body;
     try {
-      const result = await pool.query(
-        'INSERT INTO notes (title, content, created_at) VALUES ($1, $2, NOW()) RETURNING *',
-        [title, content]
-      );
-      res.json(result.rows[0]);
+        const result = await pool.query(
+            'INSERT INTO note (title, content) VALUES ($1, $2) RETURNING *',
+            [title, content]
+        );
+        res.status(201).json(result.rows[0]);
     } catch (err) {
-      console.error(err.message);
-      res.status(500).send('Server Error');
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  });
+});
 
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
+app.get('/api/notes', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM note');
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.delete('/api/notes/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM note WHERE id = $1', [id]);
+        res.status(200).json({ message: 'Note deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

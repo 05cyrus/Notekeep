@@ -8,15 +8,14 @@ function CreateArea(props) {
     title: "",
     content: ""
   });
-  const [isExpanded,setExpanded]=useState(false);
+  const [isExpanded, setExpanded] = useState(false);
+
   function handleChange(event) {
     const { name, value } = event.target;
-    setNote(prevNote => {
-      return {
-        ...prevNote,
-        [name]: value
-      };
-    });
+    setNote(prevNote => ({
+      ...prevNote,
+      [name]: value
+    }));
   }
 
   function submitNote(event) {
@@ -27,31 +26,35 @@ function CreateArea(props) {
     });
     event.preventDefault();
   }
-  function expand(){
+
+  function expand() {
     setExpanded(true);
   }
 
   return (
     <div>
       <form className="create-note">
-        {isExpanded && <input
-          name="title"
-          onChange={handleChange}
-          value={note.title}
-          placeholder="Title"
-        />}
+        {isExpanded && (
+          <input
+            name="title"
+            onChange={handleChange}
+            value={note.title}
+            placeholder="Title"
+          />
+        )}
+        
         <textarea
           name="content"
           onClick={expand}
           onChange={handleChange}
           value={note.content}
           placeholder="Take a note..."
-          rows={isExpanded?3:1} 
+          rows={isExpanded ? 3 : 1}
         />
         <Zoom in={isExpanded}>
-        <Fab onClick={submitNote}>
-        <AddIcon />
-        </Fab>
+          <Fab onClick={submitNote} style={{ backgroundColor: "#f5ba13", color: "#fff" }}>
+            <AddIcon />
+          </Fab>
         </Zoom>
       </form>
     </div>
